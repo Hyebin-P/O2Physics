@@ -35,8 +35,13 @@ using namespace o2::framework;
 using namespace o2::framework::expressions;
 using namespace o2::aod::track;
 
-enum { kECbegin = 0, kDATA = 1, kINEL, kECend };
-enum { kTrigbegin = 0, kMBAND = 1, kTrigend };
+enum { kECbegin = 0,
+       kDATA = 1,
+       kINEL,
+       kECend };
+enum { kTrigbegin = 0,
+       kMBAND = 1,
+       kTrigend };
 
 AxisSpec ZAxis = {60, -30, 30, "zaxis"};
 AxisSpec DeltaZAxis = {61, -6.1, 6.1};
@@ -53,16 +58,16 @@ std::vector<double> centBinning = {0., 20, 60., 90., 100};
 AxisSpec CentAxis = {centBinning, "centrality"};
 
 static constexpr TrackSelectionFlags::flagtype trackSelectionITS =
-    TrackSelectionFlags::kITSNCls | TrackSelectionFlags::kITSChi2NDF |
-    TrackSelectionFlags::kITSHits;
+  TrackSelectionFlags::kITSNCls | TrackSelectionFlags::kITSChi2NDF |
+  TrackSelectionFlags::kITSHits;
 
 static constexpr TrackSelectionFlags::flagtype trackSelectionTPC =
-    TrackSelectionFlags::kTPCNCls |
-    TrackSelectionFlags::kTPCCrossedRowsOverNCls |
-    TrackSelectionFlags::kTPCChi2NDF;
+  TrackSelectionFlags::kTPCNCls |
+  TrackSelectionFlags::kTPCCrossedRowsOverNCls |
+  TrackSelectionFlags::kTPCChi2NDF;
 
 static constexpr TrackSelectionFlags::flagtype trackSelectionDCA =
-    TrackSelectionFlags::kDCAz | TrackSelectionFlags::kDCAxy;
+  TrackSelectionFlags::kDCAz | TrackSelectionFlags::kDCAxy;
 
 using LabeledTracks = soa::Join<aod::Tracks, aod::McTrackLabels>;
 
@@ -81,42 +86,43 @@ struct MultiplicityCounter {
   Configurable<std::string> url{"ccdb-url", "http://alice-ccdb.cern.ch",
                                 "url of the ccdb repository"};
   Configurable<int64_t> nolaterthan{
-      "ccdb-no-later-than",
-      std::chrono::duration_cast<std::chrono::milliseconds>(
-          std::chrono::system_clock::now().time_since_epoch())
-          .count(),
-      "latest acceptable timestamp of creation for the object"};
+    "ccdb-no-later-than",
+    std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::system_clock::now().time_since_epoch())
+      .count(),
+    "latest acceptable timestamp of creation for the object"};
 
   HistogramRegistry registry{
-      "registry",
-      {
-          {"Events/Selection",
-           ";status;events",
-           {HistType::kTH1F, {{7, 0.5, 7.5}}}}, //
-          {"hrecdndeta",
-           "evntclass; triggerclass; centrality, zvtex, eta",
-           {HistType::kTHnSparseD,
-            {EvtClassAxis, TrigClassAxis, CentAxis, ZAxis, EtaAxis}}}, //
-          {"hgendndeta",
-           "evntclass; centrality, zvtex, eta",
-           {HistType::kTHnSparseD,
-            {EvtClassAxis, CentAxis, ZAxis, EtaAxis}}}, //
-          {"hreczvtx",
-           "evntclass; triggerclass; centrality, zvtex",
-           {HistType::kTHnSparseD,
-            {EvtClassAxis, TrigClassAxis, CentAxis, ZAxis}}}, //
-          {"hgenzvtx",
-           "evntclass; centrality, zvtex",
-           {HistType::kTHnSparseD, {EvtClassAxis, CentAxis, ZAxis}}} //
-      }
+    "registry",
+    {
+      {"Events/Selection",
+       ";status;events",
+       {HistType::kTH1F, {{7, 0.5, 7.5}}}}, //
+      {"hrecdndeta",
+       "evntclass; triggerclass; centrality, zvtex, eta",
+       {HistType::kTHnSparseD,
+        {EvtClassAxis, TrigClassAxis, CentAxis, ZAxis, EtaAxis}}}, //
+      {"hgendndeta",
+       "evntclass; centrality, zvtex, eta",
+       {HistType::kTHnSparseD,
+        {EvtClassAxis, CentAxis, ZAxis, EtaAxis}}}, //
+      {"hreczvtx",
+       "evntclass; triggerclass; centrality, zvtex",
+       {HistType::kTHnSparseD,
+        {EvtClassAxis, TrigClassAxis, CentAxis, ZAxis}}}, //
+      {"hgenzvtx",
+       "evntclass; centrality, zvtex",
+       {HistType::kTHnSparseD, {EvtClassAxis, CentAxis, ZAxis}}} //
+    }
 
   };
 
   std::vector<int> usedTracksIds;
 
-  void init(InitContext &) {
+  void init(InitContext&)
+  {
     auto hstat = registry.get<TH1>(HIST("Events/Selection"));
-    auto *x = hstat->GetXaxis();
+    auto* x = hstat->GetXaxis();
     x->SetBinLabel(1, "All");
     x->SetBinLabel(2, "Selected");
     x->SetBinLabel(3, "Selected INEL>0");
@@ -128,15 +134,16 @@ struct MultiplicityCounter {
 
   using FullBCs = soa::Join<aod::BCsWithTimestamps, aod::BcSels>;
   void
-  processEventStat(FullBCs const &bcs,
-                   soa::Join<aod::Collisions, aod::EvSels> const &collisions) {
+    processEventStat(FullBCs const& bcs,
+                     soa::Join<aod::Collisions, aod::EvSels> const& collisions)
+  {
     std::vector<typename std::decay_t<decltype(collisions)>::iterator> cols;
-    for (auto &bc : bcs) {
+    for (auto& bc : bcs) {
       if (!useEvSel || (bc.selection()[evsel::kIsBBT0A] &
                         bc.selection()[evsel::kIsBBT0C]) != 0) {
         registry.fill(HIST("Events/Selection"), 5.);
         cols.clear();
-        for (auto &collision : collisions) {
+        for (auto& collision : collisions) {
           if (collision.has_foundBC()) {
             if (collision.foundBCId() == bc.globalIndex()) {
               cols.emplace_back(collision);
@@ -160,32 +167,31 @@ struct MultiplicityCounter {
                  "Collect event sample stats", false);
 
   expressions::Filter trackSelectionProper =
-      ((aod::track::trackCutFlag & trackSelectionITS) == trackSelectionITS) &&
-      ifnode((aod::track::detectorMap & (uint8_t)o2::aod::track::TPC) ==
-                 (uint8_t)o2::aod::track::TPC,
-             (aod::track::trackCutFlag & trackSelectionTPC) ==
-                 trackSelectionTPC,
-             true) &&
-      ((aod::track::trackCutFlag & trackSelectionDCA) == trackSelectionDCA);
+    ((aod::track::trackCutFlag & trackSelectionITS) == trackSelectionITS) &&
+    ifnode((aod::track::detectorMap & (uint8_t)o2::aod::track::TPC) ==
+             (uint8_t)o2::aod::track::TPC,
+           (aod::track::trackCutFlag & trackSelectionTPC) ==
+             trackSelectionTPC,
+           true) &&
+    ((aod::track::trackCutFlag & trackSelectionDCA) == trackSelectionDCA);
 
   using ExTracks = soa::Join<aod::Tracks, aod::TracksExtra, aod::TrackSelection,
                              aod::TracksDCA>;
   using FiTracks = soa::Filtered<ExTracks>;
 
   expressions::Filter atrackFilter =
-      (aod::track::bestCollisionId >= 0) &&
-      (nabs(aod::track::bestDCAZ) <= 2.f) &&
-      (nabs(aod::track::bestDCAXY) <=
-       ((0.0105f + 0.0350f / npow(aod::track::pts, 1.1f))));
+    (aod::track::bestCollisionId >= 0) &&
+    (nabs(aod::track::bestDCAZ) <= 2.f) &&
+    (nabs(aod::track::bestDCAXY) <=
+     ((0.0105f + 0.0350f / npow(aod::track::pts, 1.1f))));
 
   std::vector<Double_t> tracketas;
   void processCounting(
-      soa::Join<aod::Collisions, aod::EvSels>::iterator const &collision,
-      FiTracks const &tracks,
-      //  soa::SmallGroups<soa::Join<aod::AmbiguousMFTTracks,
-      //  aod::BestCollisionsFwd>> const& atracks) //
-      soa::SmallGroups<aod::ReassignedTracksCore> const
-          &atracks) // soa::Join<aod::AmbiguousTracks, aod::BestCollisions>
+    soa::Join<aod::Collisions, aod::EvSels>::iterator const& collision,
+    FiTracks const& tracks,
+    //  soa::SmallGroups<soa::Join<aod::AmbiguousMFTTracks,
+    //  aod::BestCollisionsFwd>> const& atracks) //
+    soa::SmallGroups<aod::ReassignedTracksCore> const& atracks) // soa::Join<aod::AmbiguousTracks, aod::BestCollisions>
   {
 
     registry.fill(HIST("Events/Selection"), 1.);
@@ -214,12 +220,12 @@ struct MultiplicityCounter {
       }*/
 
       tracketas.clear();
-      for (auto &track : atracks) {
+      for (auto& track : atracks) {
         auto otrack = track.track_as<FiTracks>();
         // tracketas.push_back(track.etas());
         tracketas.push_back(otrack.eta());
       }
-      for (auto &track : tracks) {
+      for (auto& track : tracks) {
         if (std::find(usedTracksIds.begin(), usedTracksIds.end(),
                       track.globalIndex()) != usedTracksIds.end()) {
           continue;
@@ -243,27 +249,27 @@ struct MultiplicityCounter {
   using Particle = Particles::iterator;
   using ParticlesI = soa::Join<aod::McParticles, aod::ParticlesToTracks>;
   expressions::Filter primaries =
-      (aod::mcparticle::flags &
-       (uint8_t)o2::aod::mcparticle::enums::PhysicalPrimary) ==
-      (uint8_t)o2::aod::mcparticle::enums::PhysicalPrimary;
+    (aod::mcparticle::flags &
+     (uint8_t)o2::aod::mcparticle::enums::PhysicalPrimary) ==
+    (uint8_t)o2::aod::mcparticle::enums::PhysicalPrimary;
   Partition<Particles> mcSample = nabs(aod::mcparticle::eta) < estimatorEta;
   Partition<ParticlesI> primariesI =
-      ((aod::mcparticle::flags &
-        (uint8_t)o2::aod::mcparticle::enums::PhysicalPrimary) ==
-       (uint8_t)o2::aod::mcparticle::enums::PhysicalPrimary) &&
-      (nabs(aod::mcparticle::eta) < estimatorEta);
+    ((aod::mcparticle::flags &
+      (uint8_t)o2::aod::mcparticle::enums::PhysicalPrimary) ==
+     (uint8_t)o2::aod::mcparticle::enums::PhysicalPrimary) &&
+    (nabs(aod::mcparticle::eta) < estimatorEta);
 
   Preslice<FiTracks> perCol = aod::track::collisionId;
 
   Partition<soa::Filtered<LabeledTracksEx>> lsample =
-      nabs(aod::track::eta) < estimatorEta;
+    nabs(aod::track::eta) < estimatorEta;
   void processMCCounting(
-      soa::Join<aod::Collisions, aod::EvSels, aod::McCollisionLabels> const
-          &collisions,
-      aod::McCollisions const &, Particles const &mcParticles,
-      soa::Filtered<LabeledTracksEx> const &,
-      soa::SmallGroups<aod::ReassignedTracksCore> const &atracks) {
-    for (auto &collision : collisions) {
+    soa::Join<aod::Collisions, aod::EvSels, aod::McCollisionLabels> const& collisions,
+    aod::McCollisions const&, Particles const& mcParticles,
+    soa::Filtered<LabeledTracksEx> const&,
+    soa::SmallGroups<aod::ReassignedTracksCore> const& atracks)
+  {
+    for (auto& collision : collisions) {
       if (useEvSel && !collision.sel8()) {
         continue;
       }
@@ -281,7 +287,7 @@ struct MultiplicityCounter {
       tracks.bindExternalIndices(&mcParticles);
 
       usedTracksIds.clear();
-      for (auto &track : atracks) {
+      for (auto& track : atracks) {
         auto ttrack = track.track_as<soa::Filtered<LabeledTracksEx>>();
         usedTracksIds.emplace_back(ttrack.globalIndex());
         if (ttrack.has_mcParticle()) {
@@ -293,7 +299,7 @@ struct MultiplicityCounter {
           // when secondary
         }
       }
-      for (auto &track : tracks) {
+      for (auto& track : tracks) {
         if (std::find(usedTracksIds.begin(), usedTracksIds.end(),
                       track.globalIndex()) != usedTracksIds.end()) {
           continue;
@@ -346,15 +352,16 @@ struct MultiplicityCounter {
   */
 
   void processGen(
-      aod::McCollisions::iterator const &mcCollision,
-      o2::soa::SmallGroups<soa::Join<aod::Collisions, aod::EvSels,
-                                     aod::McCollisionLabels>> const &collisions,
-      Particles const &particles, FiTracks const &tracks) {
+    aod::McCollisions::iterator const& mcCollision,
+    o2::soa::SmallGroups<soa::Join<aod::Collisions, aod::EvSels,
+                                   aod::McCollisionLabels>> const& collisions,
+    Particles const& particles, FiTracks const& tracks)
+  {
     auto perCollisionMCSample = mcSample->sliceByCached(
-        aod::mcparticle::mcCollisionId, mcCollision.globalIndex());
+      aod::mcparticle::mcCollisionId, mcCollision.globalIndex());
     auto genz = mcCollision.posZ();
     registry.fill(HIST("hgenzvtx"), Double_t(kINEL), 50., genz);
-    for (auto &particle : perCollisionMCSample) {
+    for (auto& particle : perCollisionMCSample) {
       auto p = pdg->GetParticle(particle.pdgCode());
       if (p != nullptr) {
         if (std::abs(p->Charge()) >= 3) {
@@ -368,6 +375,7 @@ struct MultiplicityCounter {
                  "Process generator-level info", false);
 };
 
-WorkflowSpec defineDataProcessing(ConfigContext const &cfgc) {
+WorkflowSpec defineDataProcessing(ConfigContext const& cfgc)
+{
   return WorkflowSpec{adaptAnalysisTask<MultiplicityCounter>(cfgc)};
 }
